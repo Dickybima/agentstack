@@ -3,18 +3,19 @@ import { useConnection, usePublicClient, useReadContract, useWriteContract } fro
 import { PONS, escrowAbi } from '../lib/pons'
 import { useLaunchesBy } from '../lib/launches'
 import { errMsg, fmt } from '../lib/format'
-import { explorerTx } from '../lib/chain'
+import { explorerTx, robinhoodChain } from '../lib/chain'
 import TokenCard from '../components/TokenCard'
 
 export default function Profile() {
   const { address } = useConnection()
-  const client = usePublicClient()
+  const client = usePublicClient({ chainId: robinhoodChain.id })
   const write = useWriteContract()
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
   const [tx, setTx] = useState<string>()
 
   const fees = useReadContract({
+    chainId: robinhoodChain.id,
     address: PONS.feeEscrow,
     abi: escrowAbi,
     functionName: 'balanceOf',

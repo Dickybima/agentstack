@@ -24,7 +24,8 @@ if (WALLETCONNECT_PROJECT_ID) {
 export const config = createConfig({
   chains: [robinhoodChain],
   connectors,
-  transports: { [robinhoodChain.id]: http(RPC_URL, { batch: true }) },
+  // Fail fast instead of hanging when the RPC is slow or rate limited.
+  transports: { [robinhoodChain.id]: http(RPC_URL, { batch: true, timeout: 6_000, retryCount: 1 }) },
 })
 
 declare module 'wagmi' {

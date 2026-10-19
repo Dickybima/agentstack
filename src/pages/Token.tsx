@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useBalance, useConnection, usePublicClient, useReadContract, useReadContracts, useWriteContract } from 'wagmi'
+import { useBalance, useBytecode, useConnection, usePublicClient, useReadContract, useReadContracts, useWriteContract } from 'wagmi'
 import { formatUnits, isAddress, maxUint256, parseUnits, type Address } from 'viem'
 import {
   PHASE,
@@ -30,11 +30,20 @@ export default function TokenPage() {
 function TokenView({ token }: { token: Address }) {
   const { address: user } = useConnection()
 
-  const launch = useReadContract({ address: PONS.factory, abi: factoryAbi, functionName: 'getLaunchedToken', args: [token] })
+  const launch = useReadContract({
+    chainId: robinhoodChain.id,
+    address: PONS.factory,
+    abi: factoryAbi,
+    functionName: 'getLaunchedToken',
+    args: [token],
+  })
   const l = launch.data
   const curve = l?.curve
 
+  const code = useBytecode({ chainId: robinhoodChain.id, address: token })
+
   const meta = useReadContracts({
+    chainId: robinhoodChain.id,
     contracts: [
       { address: token, abi: tokenAbi, functionName: 'name' },
       { address: token, abi: tokenAbi, functionName: 'symbol' },
@@ -49,6 +58,7 @@ function TokenView({ token }: { token: Address }) {
 
   const isNative = !l || l.pairToken === ZERO_ADDRESS
   const pair = useReadContracts({
+    chainId: robinhoodChain.id,
     query: { enabled: !isNative },
     contracts: [
       { address: l?.pairToken, abi: tokenAbi, functionName: 'symbol' },
@@ -59,6 +69,7 @@ function TokenView({ token }: { token: Address }) {
   const quoteDecimals = isNative ? 18 : (pair.data?.[1]?.result ?? 18)
 
   const state = useReadContracts({
+    chainId: robinhoodChain.id,
     query: { enabled: !!curve, refetchInterval: 5_000 },
     contracts: [
       { address: curve, abi: curveAbi, functionName: 'getReserves' },
@@ -81,9 +92,36 @@ function TokenView({ token }: { token: Address }) {
     c?.[6].result,
   ]
 
-  if (launch.isPending || meta.isPending) return <p className="muted">Loading token…</p>
-  if (launch.isError) return <p className="error">Failed to read token: {errMsg(launch.error)}</p>
-  if (!l?.exists) return <p className="error">This token is not a Pons V2 launch.</p>
+  const retry = () => {
+    launch.refetch()
+    meta.refetch()
+    code.refetch()
+  }
+
+  if (launch.isError || meta.isError || code.isError) {
+    return (
+      <Notice title="Couldn't reach Robinhood Chain" onRetry={retry}>
+        The RPC didn't respond: {errMsg(launch.error ?? meta.error ?? code.error)}
+      </Notice>
+    )
+  }
+  if (launch.isPending || meta.isPending || code.isPending) return <LoadingToken />
+  if (!code.data || code.data === '0x') {
+    return (
+      <Notice title="Token not found on Robinhood Chain">
+        There's no contract at <code>{token}</code> on Robinhood Chain (4663). If this token lives on another network,
+        it can't be traded here. <a href={explorerAddress(token)} target="_blank" rel="noreferrer">Check on Blockscout ↗</a>
+      </Notice>
+    )
+  }
+  if (!l?.exists) {
+    return (
+      <Notice title={`${name ?? 'This token'}${symbol ? ` ($${symbol})` : ''} isn't a Pons V2 launch`}>
+        This page can only trade tokens launched through Pons V2.{' '}
+        <a href={explorerAddress(token)} target="_blank" rel="noreferrer">View on Blockscout ↗</a>
+      </Notice>
+    )
+  }
 
   const curveState: CurveState | undefined =
     reserves && sellable !== undefined && feeBps !== undefined && creatorTaxBps !== undefined
@@ -221,7 +259,7 @@ type TradeProps = {
 }
 
 function TradePanel(p: TradeProps) {
-  const client = usePublicClient()
+  const client = usePublicClient({ chainId: robinhoodChain.id })
   const qc = useQueryClient()
   const { address: user, chainId } = useConnection()
   const write = useWriteContract()
@@ -232,8 +270,9 @@ function TradePanel(p: TradeProps) {
   const [error, setError] = useState('')
   const [lastTx, setLastTx] = useState<string>()
 
-  const eth = useBalance({ address: user, query: { enabled: !!user && p.isNative } })
+  const eth = useBalance({ chainId: robinhoodChain.id, address: user, query: { enabled: !!user && p.isNative } })
   const balances = useReadContracts({
+    chainId: robinhoodChain.id,
     query: { enabled: !!user },
     contracts: [
       { address: p.token, abi: tokenAbi, functionName: 'balanceOf', args: [user ?? ZERO_ADDRESS] },
@@ -393,7 +432,7 @@ function TradePanel(p: TradeProps) {
 const TRADE_LOOKBACK = 600_000n // ≈ 17 hours at ~100ms blocks
 
 function Trades(p: { curve: Address; tokenDecimals: number; quoteDecimals: number; quoteSymbol: string }) {
-  const client = usePublicClient()
+  const client = usePublicClient({ chainId: robinhoodChain.id })
   const q = useQuery({
     queryKey: ['trades', p.curve],
     enabled: !!client,
@@ -442,5 +481,34 @@ function Trades(p: { curve: Address; tokenDecimals: number; quoteDecimals: numbe
         </table>
       )}
     </>
+  )
+}
+
+function LoadingToken() {
+  const [slow, setSlow] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), 5_000)
+    return () => clearTimeout(t)
+  }, [])
+  return (
+    <div className="card notice">
+      <div className="spinner" aria-hidden />
+      <p className="muted">Loading token from Robinhood Chain…</p>
+      {slow && <p className="muted small">This is taking longer than usual — the public RPC may be busy.</p>}
+    </div>
+  )
+}
+
+function Notice({ title, children, onRetry }: { title: string; children: ReactNode; onRetry?: () => void }) {
+  return (
+    <div className="card notice">
+      <h3>{title}</h3>
+      <p className="muted">{children}</p>
+      {onRetry && (
+        <button className="btn primary" onClick={onRetry}>
+          Try again
+        </button>
+      )}
+    </div>
   )
 }

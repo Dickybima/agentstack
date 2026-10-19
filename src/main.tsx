@@ -8,7 +8,8 @@ import App from './App'
 import './styles.css'
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 10_000, retry: 2 } },
+  // The RPC transport already retries once; retrying here too would multiply the wait on a dead RPC.
+  defaultOptions: { queries: { staleTime: 10_000, retry: 0 } },
 })
 
 createRoot(document.getElementById('root')!).render(

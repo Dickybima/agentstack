@@ -1,3 +1,4 @@
+import { robinhoodChain } from './chain'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { usePublicClient } from 'wagmi'
 import type { Address, PublicClient } from 'viem'
@@ -74,7 +75,7 @@ async function fetchLaunchPage(client: PublicClient, toBlock: bigint) {
 }
 
 export function useLaunches() {
-  const client = usePublicClient()
+  const client = usePublicClient({ chainId: robinhoodChain.id })
   return useInfiniteQuery({
     queryKey: ['launches'],
     enabled: !!client,
@@ -89,7 +90,7 @@ export function useLaunches() {
 }
 
 export function useLaunchesBy(deployer?: Address) {
-  const client = usePublicClient()
+  const client = usePublicClient({ chainId: robinhoodChain.id })
   return useQuery({
     queryKey: ['launchesBy', deployer],
     enabled: !!client && !!deployer,

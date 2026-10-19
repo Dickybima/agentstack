@@ -11,7 +11,7 @@ const factory = { address: PONS.factory, abi: factoryAbi } as const
 
 export default function Create() {
   const nav = useNavigate()
-  const client = usePublicClient()
+  const client = usePublicClient({ chainId: robinhoodChain.id })
   const { address, chainId } = useConnection()
   const write = useWriteContract()
 
@@ -37,6 +37,7 @@ export default function Create() {
     setForm((f) => ({ ...f, [k]: e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value }))
 
   const base = useReadContracts({
+    chainId: robinhoodChain.id,
     contracts: [
       { ...factory, functionName: 'launchConfigCount' },
       { ...factory, functionName: 'launchFee' },
@@ -46,6 +47,7 @@ export default function Create() {
   const [count, launchFee, maxTaxBps] = [base.data?.[0].result, base.data?.[1].result, base.data?.[2].result]
 
   const configs = useReadContracts({
+    chainId: robinhoodChain.id,
     query: { enabled: count !== undefined },
     contracts: Array.from({ length: Number(count ?? 0n) }, (_, i) => ({
       ...factory,
@@ -60,6 +62,7 @@ export default function Create() {
   const selected = enabledConfigs.find((c) => c.id === selectedId)?.cfg
 
   const canLaunch = useReadContract({
+    chainId: robinhoodChain.id,
     ...factory,
     functionName: 'canLaunch',
     args: address ? [address] : undefined,
