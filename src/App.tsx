@@ -6,6 +6,7 @@ import TokenPage from './pages/Token'
 import Profile from './pages/Profile'
 
 export const BRAND = 'LOOSE AGENT'
+export const LOOSE_TOKEN = '0x351e3ee4d6a0eeb1986826cc2f673373516b9b80'
 
 export default function App() {
   return (
@@ -18,6 +19,9 @@ export default function App() {
           <NavLink to="/" end>Explore</NavLink>
           <NavLink to="/create">Launch</NavLink>
           <NavLink to="/profile">Profile</NavLink>
+          <NavLink to={`/token/${LOOSE_TOKEN}`} className="nav-token">
+            $LOOSE
+          </NavLink>
         </nav>
         <ConnectButton />
       </header>

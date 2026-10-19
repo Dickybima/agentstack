@@ -50,6 +50,8 @@ h3 { margin-top: 24px; font-size: 1rem; }
 .nav nav { display: flex; gap: 4px; flex: 1; }
 .nav nav a { color: var(--muted); padding: 6px 12px; border-radius: 999px; }
 .nav nav a.active, .nav nav a:hover { color: var(--text); background: var(--panel-2); text-decoration: none; }
+.nav nav a.nav-token { color: var(--accent); font-weight: 700; border: 1px solid rgba(195, 245, 60, 0.35); }
+.nav nav a.nav-token:hover, .nav nav a.nav-token.active { color: var(--accent-ink); background: var(--accent); }
 
 /* buttons */
 .btn {
