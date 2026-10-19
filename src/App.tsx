@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import Create from './pages/Create'
 import TokenPage from './pages/Token'
 import Profile from './pages/Profile'
+import Rewards from './pages/Rewards'
 import { BRAND, LOOSE_TOKEN, X_URL } from './lib/brand'
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
           <NavLink to="/" end>Explore</NavLink>
           <NavLink to="/create">Launch</NavLink>
           <NavLink to="/profile">Profile</NavLink>
+          <NavLink to="/rewards">Rewards</NavLink>
           <NavLink to={`/token/${LOOSE_TOKEN}`} className="nav-token">
             $LOOSE
           </NavLink>
@@ -39,6 +41,7 @@ export default function App() {
           <Route path="/create" element={<Create />} />
           <Route path="/token/:address" element={<TokenPage />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/rewards" element={<Rewards />} />
           <Route path="*" element={<p className="muted">Page not found.</p>} />
         </Routes>
       </main>

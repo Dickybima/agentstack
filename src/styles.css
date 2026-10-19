@@ -164,7 +164,9 @@ td.sell { color: var(--red); }
   .preview, .token-page aside { position: static; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .nav { gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
-  .nav nav { order: 3; width: 100%; }
+  .nav nav { order: 3; flex: 0 0 100%; overflow-x: auto; scrollbar-width: none; }
+  .nav nav::-webkit-scrollbar { display: none; }
+  .nav nav a { padding: 6px 10px; white-space: nowrap; flex-shrink: 0; }
   .nav .brand { font-size: 1rem; gap: 6px; }
   .nav .brand-mark { width: 26px; height: 26px; }
   .nav-actions { gap: 8px; }
@@ -226,3 +228,37 @@ td.sell { color: var(--red); }
 .chart-overlay > span { text-align: center; padding: 0 16px; }
 .chart-err { display: block; margin-top: 6px; color: var(--muted); font-size: 0.75rem; word-break: break-word; }
 @media (max-width: 380px) { .hide-xs { display: none; } }
+
+/* rewards */
+.rewards { display: flex; flex-direction: column; gap: 20px; max-width: 760px; margin: 0 auto; }
+.rewards .hero { padding-bottom: 8px; }
+.pill-accent { display: inline-block; margin-bottom: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(195, 245, 60, 0.35); color: var(--accent); font-weight: 700; font-size: 0.85rem; }
+.stock-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.stock { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 18px; min-width: 104px; border-radius: 14px; background: var(--panel); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
+.stock-ticker { font-weight: 800; font-size: 1.15rem; color: var(--c); letter-spacing: 0.04em; }
+.stock-name { font-size: 0.78rem; color: var(--muted); }
+.stock-lg { padding: 22px 34px; min-width: 200px; box-shadow: 0 0 40px color-mix(in srgb, var(--c) 25%, transparent); }
+.stock-lg .stock-ticker { font-size: 2.4rem; }
+.stock-lg .stock-name { font-size: 1rem; }
+.checker h2 { margin-bottom: 14px; }
+.check-form { display: flex; gap: 10px; }
+.check-form input { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.result { margin-top: 18px; padding: 18px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+.result.yes { border-color: rgba(195, 245, 60, 0.45); }
+.result-head { display: flex; align-items: center; gap: 12px; }
+.result-head > div { display: flex; flex-direction: column; }
+.result-head strong { font-size: 1.2rem; }
+.result-icon { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 1.2rem; }
+.result.yes .result-icon { background: var(--accent); color: var(--accent-ink); }
+.result.no .result-icon { background: var(--panel-2); color: var(--red); }
+.result .facts { margin: 0; }
+.reveal { display: flex; justify-content: center; padding: 8px 0 4px; }
+.reveal.done .stock { animation: pop 0.45s ease-out; }
+@keyframes pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.rules ol { margin: 0 0 12px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 860px) {
+  .check-form { flex-direction: column; }
+  .stock-row { flex-wrap: nowrap; gap: 8px; }
+  .stock-row .stock { flex: 1; min-width: 0; padding: 10px 4px; }
+  .stock-row .stock-ticker { font-size: 1rem; }
+}
