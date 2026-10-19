@@ -48,7 +48,7 @@ export default function ConnectButton() {
     return (
       <>
         <button className="btn primary" onClick={() => setOpen(true)}>
-          Connect wallet
+          Connect<span className="hide-xs">&nbsp;wallet</span>
         </button>
         {open && <WalletModal onClose={() => setOpen(false)} />}
       </>

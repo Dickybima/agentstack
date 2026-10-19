@@ -44,6 +44,12 @@ h3 { margin-top: 24px; font-size: 1rem; }
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
 }
+.nav-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.icon-link {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+}
+.icon-link:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
 .brand { font-weight: 800; font-size: 1.15rem; color: var(--text); display: flex; gap: 8px; align-items: center; }
 .brand:hover { text-decoration: none; }
 .brand-mark { width: 32px; height: 32px; }
@@ -159,6 +165,11 @@ td.sell { color: var(--red); }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .nav { gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
   .nav nav { order: 3; width: 100%; }
+  .nav .brand { font-size: 1rem; gap: 6px; }
+  .nav .brand-mark { width: 26px; height: 26px; }
+  .nav-actions { gap: 8px; }
+  .nav-actions .btn { padding: 8px 12px; font-size: 0.88rem; }
+  .icon-link { width: 36px; height: 36px; }
   .two { grid-template-columns: minmax(0, 1fr); }
   .token-head { flex-wrap: wrap; }
   .trades th:nth-child(2), .trades td:nth-child(2) { display: none; }
@@ -214,3 +225,4 @@ td.sell { color: var(--red); }
 @media (max-width: 860px) { .chart-box { height: 280px; } }
 .chart-overlay > span { text-align: center; padding: 0 16px; }
 .chart-err { display: block; margin-top: 6px; color: var(--muted); font-size: 0.75rem; word-break: break-word; }
+@media (max-width: 380px) { .hide-xs { display: none; } }
