@@ -31,7 +31,7 @@ export function useEthUsd() {
 const SUBSCRIPT = '₀₁₂₃₄₅₆₇₈₉'
 
 // Small prices use the "0.0₅76" convention: subscript = number of zeros after the decimal point.
-export function fmtSmall(n: number, prefix = '') {
+export function fmtSmall(n: number, prefix = ''): string {
   // Axis ticks near zero come through as float noise like 5e-21; show those as plain 0.
   if (!Number.isFinite(n) || Math.abs(n) < 1e-15) return `${prefix}0`
   if (n < 0) return `-${fmtSmall(-n, prefix)}`
@@ -46,7 +46,7 @@ export function fmtSmall(n: number, prefix = '') {
   return `${prefix}0.0${sub}${digits}`
 }
 
-export function fmtUsd(n: number) {
+export function fmtUsd(n: number): string {
   if (!Number.isFinite(n)) return '–'
   if (n < 0) return `-${fmtUsd(-n)}`
   if (n < 1) return fmtSmall(n, '$')
