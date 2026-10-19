@@ -1,6 +1,6 @@
 import { createConfig, fallback, http, type CreateConnectorFn } from 'wagmi'
 import { injected, walletConnect } from 'wagmi/connectors'
-import { RPC_URLS, robinhoodChain } from './lib/chain'
+import { RPC_ENDPOINTS, robinhoodChain } from './lib/chain'
 
 // Free project id from https://dashboard.reown.com — enables QR / mobile wallet connections.
 export const WALLETCONNECT_PROJECT_ID: string = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || ''
@@ -26,7 +26,7 @@ export const config = createConfig({
   connectors,
   // Fail fast and move to the next RPC instead of hanging when one is slow, blocked or rate limited.
   transports: {
-    [robinhoodChain.id]: fallback(RPC_URLS.map((url) => http(url, { batch: true, timeout: 6_000, retryCount: 0 }))),
+    [robinhoodChain.id]: fallback(RPC_ENDPOINTS.map((e) => http(e.url, { batch: e.batch, timeout: 6_000, retryCount: 0 }))),
   },
 })
 

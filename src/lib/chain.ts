@@ -3,12 +3,14 @@ import { defineChain } from 'viem'
 export const PUBLIC_RPC_URL = 'https://rpc.mainnet.chain.robinhood.com'
 
 // Order the app tries RPCs in: a custom one if configured, then our same-origin proxy
-// (api/rpc.js on Vercel, avoids browser CORS/rate-limit issues), then the public endpoint.
-export const RPC_URLS: string[] = [
-  import.meta.env.VITE_RPC_URL,
-  typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : undefined,
-  PUBLIC_RPC_URL,
-].filter((u): u is string => !!u)
+// (api/rpc.js on Vercel, avoids browser CORS/rate-limit issues), then public endpoints.
+// Blockscout's eth-rpc endpoint allows browser access but doesn't take batched requests.
+export const RPC_ENDPOINTS: { url: string; batch: boolean }[] = [
+  { url: import.meta.env.VITE_RPC_URL as string | undefined, batch: true },
+  { url: typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : undefined, batch: true },
+  { url: PUBLIC_RPC_URL, batch: true },
+  { url: 'https://robinhoodchain.blockscout.com/api/eth-rpc', batch: false },
+].filter((e): e is { url: string; batch: boolean } => !!e.url)
 
 export const EXPLORER_URL = 'https://robinhoodchain.blockscout.com'
 

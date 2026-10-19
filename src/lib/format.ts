@@ -31,6 +31,7 @@ export function safeUrl(url?: string) {
 
 export function errMsg(e: unknown) {
   if (!e) return ''
-  const anyE = e as { shortMessage?: string; message?: string }
-  return anyE.shortMessage || anyE.message || String(e)
+  const anyE = e as { shortMessage?: string; message?: string; details?: string }
+  const base = anyE.shortMessage || anyE.message || String(e)
+  return anyE.details && !base.includes(anyE.details) ? `${base} ${anyE.details}` : base
 }
