@@ -25,7 +25,7 @@ export default function ConnectButton() {
   if (chainId !== robinhoodChain.id) {
     return (
       <button className="btn warn" onClick={() => switchChain.mutate({ chainId: robinhoodChain.id })}>
-        Switch ke Robinhood Chain
+        Switch to Robinhood Chain
       </button>
     )
   }

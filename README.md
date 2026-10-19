@@ -1,43 +1,43 @@
-# LooseAgent Launchpad
+# LOOSE AGENT
 
-Frontend launchpad di atas **Pons V2** (Robinhood Chain, chain id 4663). Token di-launch ke bonding curve ETH milik Pons. Saat curve habis terjual, token otomatis graduate ke pool Uniswap v4 dengan likuiditas terkunci permanen.
+A token launchpad frontend built on **Pons V2** (Robinhood Chain, chain id 4663). Tokens launch onto a Pons ETH bonding curve. When the curve sells out, the token automatically graduates to a Uniswap v4 pool with permanently locked liquidity.
 
-## Fitur
+## Features
 
-- **Explore** – daftar launch terbaru (event `TokenLaunched` dari factory Pons), progress graduation, filter, dan pencarian.
-- **Launch** – buat token (nama, simbol, logo, deskripsi, sosial, creator tax, buyback) plus dev buy awal secara atomik lewat `PonsV2LaunchAndBuy`.
-- **Token page** – harga, market cap, progress, trade terbaru, serta buy/sell di bonding curve dengan quote lokal dan proteksi slippage.
-- **Profile** – token yang kamu launch dan klaim creator fee dari fee escrow.
+- **Explore** – newest launches (`TokenLaunched` events from the Pons factory), graduation progress, filters, and search.
+- **Launch** – create a token (name, symbol, logo, description, socials, creator tax, buyback) with an atomic initial dev buy via `PonsV2LaunchAndBuy`.
+- **Token page** – price, market cap, progress, recent trades, and buy/sell on the bonding curve with local quotes and slippage protection.
+- **Profile** – tokens you launched and creator fee claims from the fee escrow.
 
-## Menjalankan
+## Running
 
 ```bash
 npm install
-cp .env.example .env   # opsional: isi RPC sendiri
+cp .env.example .env   # optional: set your own RPC
 npm run dev            # http://localhost:5173
-npm run build          # output statis di dist/
+npm run build          # static output in dist/
 ```
 
-Hasil build berupa situs statis. Bisa di-deploy ke Vercel (`vercel.json` sudah ada), Netlify (`public/_redirects`), atau hosting statis lain.
+The build is a static site. Deploy it to Vercel (`vercel.json` included), Netlify (`public/_redirects`), or any static host.
 
-## Kontrak (Robinhood Chain 4663)
+## Contracts (Robinhood Chain 4663)
 
-| Kontrak | Alamat |
+| Contract | Address |
 |---|---|
 | PonsV2LaunchFactory | `0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e` |
 | PonsV2LaunchAndBuy | `0xe33E9E479dF8802cb0866d5d05258bEc4cF62948` |
 | PonsV2MemeHook | `0xE5e702641Ea86F4ae6cC3cDaeD2B886f976Be044` |
 | Fee Escrow | `0xd3AFEB2a57f70eF218Aa82451c51B2fb0416Ac9e` |
 
-Alamat dan ABI diambil dari paket publik `pons-client` dan dokumentasi Pons di Bitquery. Cek ulang dengan [docs Pons](https://docs.ponsfamily.com/v2) atau [Blockscout](https://robinhoodchain.blockscout.com) sebelum dipakai dengan dana besar.
+Addresses and ABIs come from the public `pons-client` package and Bitquery's Pons docs. Verify them against the [Pons docs](https://docs.ponsfamily.com/v2) or [Blockscout](https://robinhoodchain.blockscout.com) before moving real funds.
 
-## Struktur
+## Layout
 
 ```
-src/lib/pons.ts      alamat, ABI, matematika curve (quote buy/sell)
-src/lib/launches.ts  indexing launch dari log on-chain
-src/lib/chain.ts     definisi Robinhood Chain
+src/lib/pons.ts      addresses, ABIs, curve math (buy/sell quotes)
+src/lib/launches.ts  launch indexing from on-chain logs
+src/lib/chain.ts     Robinhood Chain definition
 src/pages/           Home, Create, Token, Profile
 ```
 
-Untuk mengganti nama brand, ubah `BRAND` di `src/App.tsx` dan `<title>` di `index.html`.
+To rename the brand, change `BRAND` in `src/App.tsx` and the `<title>` in `index.html`.

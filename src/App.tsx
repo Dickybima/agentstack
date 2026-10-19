@@ -5,7 +5,7 @@ import Create from './pages/Create'
 import TokenPage from './pages/Token'
 import Profile from './pages/Profile'
 
-export const BRAND = 'LooseAgent'
+export const BRAND = 'LOOSE AGENT'
 
 export default function App() {
   return (
@@ -27,12 +27,12 @@ export default function App() {
           <Route path="/create" element={<Create />} />
           <Route path="/token/:address" element={<TokenPage />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<p className="muted">Halaman tidak ditemukan.</p>} />
+          <Route path="*" element={<p className="muted">Page not found.</p>} />
         </Routes>
       </main>
       <footer className="footer">
         Powered by <a href="https://docs.ponsfamily.com/v2" target="_blank" rel="noreferrer">Pons V2</a> on Robinhood Chain.
-        Token meme sangat spekulatif — DYOR.
+        Meme tokens are highly speculative — DYOR.
       </footer>
     </>
   )

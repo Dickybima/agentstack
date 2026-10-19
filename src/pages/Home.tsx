@@ -26,10 +26,10 @@ export default function Home() {
     <>
       <section className="hero">
         <h1>
-          Launch token dalam <span className="accent">satu klik</span>.
+          Launch a token in <span className="accent">one click</span>.
         </h1>
         <p className="muted">
-          Bonding curve ETH di Pons V2, otomatis graduate ke pool Uniswap v4 dengan likuiditas terkunci permanen. Di
+          ETH bonding curves on Pons V2 that auto-graduate to Uniswap v4 pools with permanently locked liquidity. On
           Robinhood Chain.
         </p>
         <div className="hero-actions">
@@ -43,7 +43,7 @@ export default function Home() {
               if (isAddress(search.trim())) nav(`/token/${search.trim()}`)
             }}
           >
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama, simbol, atau paste alamat token" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, symbol, or paste a token address" />
           </form>
         </div>
       </section>
@@ -51,14 +51,14 @@ export default function Home() {
       <div className="tabs">
         {(['all', 'curve', 'graduated'] as Filter[]).map((f) => (
           <button key={f} className={filter === f ? 'tab active' : 'tab'} onClick={() => setFilter(f)}>
-            {f === 'all' ? 'Terbaru' : f === 'curve' ? 'Di bonding curve' : 'Graduated'}
+            {f === 'all' ? 'Newest' : f === 'curve' ? 'On bonding curve' : 'Graduated'}
           </button>
         ))}
       </div>
 
       {q.isPending && <div className="grid">{Array.from({ length: 6 }, (_, i) => <div key={i} className="card skeleton" />)}</div>}
-      {q.isError && <p className="error">Gagal memuat launch: {errMsg(q.error)}</p>}
-      {q.isSuccess && launches.length === 0 && <p className="muted">Belum ada token yang cocok.</p>}
+      {q.isError && <p className="error">Failed to load launches: {errMsg(q.error)}</p>}
+      {q.isSuccess && launches.length === 0 && <p className="muted">No matching tokens yet.</p>}
 
       <div className="grid">
         {launches.map((l) => (
@@ -69,7 +69,7 @@ export default function Home() {
       {q.hasNextPage && (
         <div className="center">
           <button className="btn ghost" disabled={q.isFetchingNextPage} onClick={() => q.fetchNextPage()}>
-            {q.isFetchingNextPage ? 'Memuat…' : 'Muat lebih banyak'}
+            {q.isFetchingNextPage ? 'Loading…' : 'Load more'}
           </button>
         </div>
       )}

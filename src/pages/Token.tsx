@@ -23,7 +23,7 @@ import TokenLogo from '../components/TokenLogo'
 
 export default function TokenPage() {
   const { address: param } = useParams()
-  if (!param || !isAddress(param)) return <p className="error">Alamat token tidak valid.</p>
+  if (!param || !isAddress(param)) return <p className="error">Invalid token address.</p>
   return <TokenView token={param} />
 }
 
@@ -81,9 +81,9 @@ function TokenView({ token }: { token: Address }) {
     c?.[6].result,
   ]
 
-  if (launch.isPending || meta.isPending) return <p className="muted">Memuat token…</p>
-  if (launch.isError) return <p className="error">Gagal membaca token: {errMsg(launch.error)}</p>
-  if (!l?.exists) return <p className="error">Token ini bukan launch Pons V2.</p>
+  if (launch.isPending || meta.isPending) return <p className="muted">Loading token…</p>
+  if (launch.isError) return <p className="error">Failed to read token: {errMsg(launch.error)}</p>
+  if (!l?.exists) return <p className="error">This token is not a Pons V2 launch.</p>
 
   const curveState: CurveState | undefined =
     reserves && sellable !== undefined && feeBps !== undefined && creatorTaxBps !== undefined
@@ -140,7 +140,7 @@ function TokenView({ token }: { token: Address }) {
 
         <div className="stats">
           <div>
-            <span className="muted small">Harga</span>
+            <span className="muted small">Price</span>
             <strong>{price ? price.toExponential(3) : '–'} {quoteSymbol}</strong>
           </div>
           <div>
@@ -153,16 +153,16 @@ function TokenView({ token }: { token: Address }) {
           </div>
           <div>
             <span className="muted small">Buyback</span>
-            <strong>{l.buybackEnabled ? 'Aktif' : 'Off'}</strong>
+            <strong>{l.buybackEnabled ? 'On' : 'Off'}</strong>
           </div>
         </div>
 
-        <h3>Progress graduation</h3>
+        <h3>Graduation progress</h3>
         <Progress pct={pct} />
         <p className="muted small">
           {isGraduated
-            ? 'Curve selesai — likuiditas sudah dipindah ke Uniswap v4 dan terkunci permanen.'
-            : `${fmt(raised ?? 0n, quoteDecimals)} / ${fmt(l.graduationThreshold, quoteDecimals)} ${quoteSymbol} terkumpul (${pct.toFixed(2)}%)`}
+            ? 'Curve complete — liquidity has moved to Uniswap v4 and is permanently locked.'
+            : `${fmt(raised ?? 0n, quoteDecimals)} / ${fmt(l.graduationThreshold, quoteDecimals)} ${quoteSymbol} raised (${pct.toFixed(2)}%)`}
         </p>
 
         <dl className="facts">
@@ -180,10 +180,10 @@ function TokenView({ token }: { token: Address }) {
       <aside>
         {isGraduated ? (
           <div className="card">
-            <h3>Token sudah graduate</h3>
+            <h3>Token has graduated</h3>
             <p className="muted">
-              Trading sekarang berjalan di pool Uniswap v4 (hook Pons). Gunakan aggregator/DEX yang mendukung Robinhood
-              Chain untuk swap token ini.
+              Trading now happens in the Uniswap v4 pool (Pons hook). Use an aggregator or DEX that supports Robinhood
+              Chain to swap this token.
             </p>
           </div>
         ) : curveState ? (
@@ -257,22 +257,22 @@ function TradePanel(p: TradeProps) {
   async function ensureAllowance(asset: Address, spender: Address, needed: bigint) {
     const allowance = await client!.readContract({ address: asset, abi: tokenAbi, functionName: 'allowance', args: [user!, spender] })
     if (allowance >= needed) return
-    setStatus('Approve di wallet…')
+    setStatus('Approve in your wallet…')
     const hash = await write.mutateAsync({ address: asset, abi: tokenAbi, functionName: 'approve', args: [spender, maxUint256] })
-    setStatus('Menunggu approve…')
+    setStatus('Waiting for approval…')
     await client!.waitForTransactionReceipt({ hash })
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!client || !user) return setError('Hubungkan wallet dulu.')
-    if (chainId !== robinhoodChain.id) return setError('Pindah ke Robinhood Chain dulu.')
-    if (parsed <= 0n) return setError('Masukkan jumlah.')
+    if (!client || !user) return setError('Connect your wallet first.')
+    if (chainId !== robinhoodChain.id) return setError('Switch to Robinhood Chain first.')
+    if (parsed <= 0n) return setError('Enter an amount.')
     try {
       let hash: `0x${string}`
       if (side === 'buy') {
-        if (parsed > quoteBal) throw new Error(`Saldo ${p.quoteSymbol} tidak cukup.`)
+        if (parsed > quoteBal) throw new Error(`Insufficient ${p.quoteSymbol} balance.`)
         if (!p.isNative) await ensureAllowance(p.pairToken, p.curve, parsed)
         const minOut = withSlippage(buyQuote!.tokensOut, slippageBps)
         const req = {
@@ -283,20 +283,20 @@ function TradePanel(p: TradeProps) {
           value: p.isNative ? parsed : 0n,
         } as const
         await client.simulateContract({ ...req, account: user })
-        setStatus('Konfirmasi di wallet…')
+        setStatus('Confirm in your wallet…')
         hash = await write.mutateAsync(req)
       } else {
-        if (parsed > tokenBal) throw new Error(`Saldo ${p.symbol} tidak cukup.`)
+        if (parsed > tokenBal) throw new Error(`Insufficient ${p.symbol} balance.`)
         await ensureAllowance(p.token, p.curve, parsed)
         const minOut = withSlippage(sellOut!, slippageBps)
         const req = { address: p.curve, abi: curveAbi, functionName: 'sell', args: [parsed, minOut, user] } as const
         await client.simulateContract({ ...req, account: user })
-        setStatus('Konfirmasi di wallet…')
+        setStatus('Confirm in your wallet…')
         hash = await write.mutateAsync(req)
       }
-      setStatus('Menunggu konfirmasi…')
+      setStatus('Waiting for confirmation…')
       const receipt = await client.waitForTransactionReceipt({ hash })
-      if (receipt.status !== 'success') throw new Error('Transaksi gagal (reverted).')
+      if (receipt.status !== 'success') throw new Error('Transaction failed (reverted).')
       setLastTx(hash)
       setAmount('')
       p.onDone()
@@ -326,10 +326,10 @@ function TradePanel(p: TradeProps) {
 
       <label>
         <span className="row">
-          <span>Jumlah ({side === 'buy' ? p.quoteSymbol : p.symbol})</span>
+          <span>Amount ({side === 'buy' ? p.quoteSymbol : p.symbol})</span>
           {user && (
             <button type="button" className="link" onClick={() => setAmount(formatUnits(maxIn, inDecimals))}>
-              Saldo: {fmt(maxIn, inDecimals)}
+              Balance: {fmt(maxIn, inDecimals)}
             </button>
           )}
         </span>
@@ -356,19 +356,19 @@ function TradePanel(p: TradeProps) {
       <div className="quote">
         {buyQuote && (
           <>
-            <div className="row"><span className="muted">Kamu dapat ≈</span><strong>{fmt(buyQuote.tokensOut, p.tokenDecimals)} {p.symbol}</strong></div>
+            <div className="row"><span className="muted">You receive ≈</span><strong>{fmt(buyQuote.tokensOut, p.tokenDecimals)} {p.symbol}</strong></div>
             {buyQuote.refund > 0n && (
-              <div className="row"><span className="muted">Refund (curve habis)</span><span>{fmt(buyQuote.refund, p.quoteDecimals)} {p.quoteSymbol}</span></div>
+              <div className="row"><span className="muted">Refund (curve sold out)</span><span>{fmt(buyQuote.refund, p.quoteDecimals)} {p.quoteSymbol}</span></div>
             )}
           </>
         )}
         {sellOut !== undefined && (
-          <div className="row"><span className="muted">Kamu dapat ≈</span><strong>{fmt(sellOut, p.quoteDecimals, 6)} {p.quoteSymbol}</strong></div>
+          <div className="row"><span className="muted">You receive ≈</span><strong>{fmt(sellOut, p.quoteDecimals, 6)} {p.quoteSymbol}</strong></div>
         )}
         <div className="row small muted">
           <span>Fee {Number(p.state.feeBps) / 100}% · Creator tax {Number(p.state.creatorTaxBps) / 100}%</span>
         </div>
-        {side === 'buy' && snipePct > 0 && <p className="warn-text small">Anti-snipe tax aktif: {snipePct}% (turun ke 0 dalam beberapa detik).</p>}
+        {side === 'buy' && snipePct > 0 && <p className="warn-text small">Anti-snipe tax active: {snipePct}% (drops to 0 within seconds).</p>}
       </div>
 
       <label className="inline">
@@ -379,18 +379,18 @@ function TradePanel(p: TradeProps) {
       {error && <p className="error">{error}</p>}
       {lastTx && !error && (
         <p className="ok small">
-          Berhasil! <a href={explorerTx(lastTx)} target="_blank" rel="noreferrer">Lihat transaksi</a>
+          Success! <a href={explorerTx(lastTx)} target="_blank" rel="noreferrer">View transaction</a>
         </p>
       )}
 
       <button className={`btn lg ${side === 'buy' ? 'primary' : 'danger'}`} disabled={!!status || !user}>
-        {status || (!user ? 'Hubungkan wallet' : side === 'buy' ? `Beli ${p.symbol}` : `Jual ${p.symbol}`)}
+        {status || (!user ? 'Connect wallet' : side === 'buy' ? `Buy ${p.symbol}` : `Sell ${p.symbol}`)}
       </button>
     </form>
   )
 }
 
-const TRADE_LOOKBACK = 600_000n // ≈ 17 jam di blok ~100ms
+const TRADE_LOOKBACK = 600_000n // ≈ 17 hours at ~100ms blocks
 
 function Trades(p: { curve: Address; tokenDecimals: number; quoteDecimals: number; quoteSymbol: string }) {
   const client = usePublicClient()
@@ -415,14 +415,14 @@ function Trades(p: { curve: Address; tokenDecimals: number; quoteDecimals: numbe
 
   return (
     <>
-      <h3>Trade terbaru</h3>
-      {q.isPending && <p className="muted small">Memuat…</p>}
+      <h3>Recent trades</h3>
+      {q.isPending && <p className="muted small">Loading…</p>}
       {q.isError && <p className="error small">{errMsg(q.error)}</p>}
-      {q.data?.length === 0 && <p className="muted small">Belum ada trade.</p>}
+      {q.data?.length === 0 && <p className="muted small">No trades yet.</p>}
       {!!q.data?.length && (
         <table className="trades">
           <thead>
-            <tr><th>Tipe</th><th>Akun</th><th>{p.quoteSymbol}</th><th>Token</th><th>Tx</th></tr>
+            <tr><th>Type</th><th>Account</th><th>{p.quoteSymbol}</th><th>Token</th><th>Tx</th></tr>
           </thead>
           <tbody>
             {q.data.map((log) => {
