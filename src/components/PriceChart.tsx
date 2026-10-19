@@ -29,6 +29,7 @@ type Props = {
   quoteSymbol: string
   quoteDecimals: number
   status: 'loading' | 'ready' | 'error'
+  error?: string
 }
 
 type Candle = { time: UTCTimestamp; open: number; high: number; low: number; close: number; volume: number; up: boolean }
@@ -56,7 +57,7 @@ function buildCandles(trades: Trade[], interval: number, scale: number, volScale
   return candles
 }
 
-export default function PriceChart({ trades, supply, ethUsd, quoteSymbol, quoteDecimals, status }: Props) {
+export default function PriceChart({ trades, supply, ethUsd, quoteSymbol, quoteDecimals, status, error }: Props) {
   const box = useRef<HTMLDivElement>(null)
   const chart = useRef<IChartApi | null>(null)
   const candleSeries = useRef<ISeriesApi<'Candlestick'> | null>(null)
@@ -166,7 +167,14 @@ export default function PriceChart({ trades, supply, ethUsd, quoteSymbol, quoteD
       )}
       <div className="chart-box" ref={box}>
         {status === 'loading' && <div className="chart-overlay muted small">Loading trades…</div>}
-        {status === 'error' && <div className="chart-overlay error small">Couldn't load trades, retrying…</div>}
+        {status === 'error' && (
+          <div className="chart-overlay error small">
+            <span>
+              Couldn't load trades, retrying…
+              {error && <span className="chart-err">{error}</span>}
+            </span>
+          </div>
+        )}
         {status === 'ready' && candles.length === 0 && <div className="chart-overlay muted small">No trades yet</div>}
       </div>
     </div>

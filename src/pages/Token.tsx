@@ -96,7 +96,7 @@ function TokenView({ token }: { token: Address }) {
   ]
 
   const ethUsd = useEthUsd().data
-  const history = useCurveTrades(token, curve, tokenDecimals, quoteDecimals)
+  const history = useCurveTrades(curve, tokenDecimals, quoteDecimals)
 
   const retry = () => {
     launch.refetch()
@@ -210,6 +210,7 @@ function TokenView({ token }: { token: Address }) {
           quoteSymbol={quoteSymbol}
           quoteDecimals={quoteDecimals}
           status={history.status}
+          error={history.error}
         />
 
         <h3>Graduation progress</h3>
@@ -232,6 +233,7 @@ function TokenView({ token }: { token: Address }) {
         <TradesTable
           trades={history.trades}
           status={history.status}
+          error={history.error}
           tokenDecimals={tokenDecimals}
           quoteDecimals={quoteDecimals}
           quoteSymbol={quoteSymbol}
@@ -464,6 +466,7 @@ function timeAgo(t: number) {
 function TradesTable(p: {
   trades: Trade[]
   status: 'loading' | 'ready' | 'error'
+  error?: string
   tokenDecimals: number
   quoteDecimals: number
   quoteSymbol: string
@@ -474,7 +477,7 @@ function TradesTable(p: {
     <>
       <h3>Recent trades</h3>
       {p.status === 'loading' && <p className="muted small">Loading…</p>}
-      {p.status === 'error' && <p className="error small">Couldn't load trades, retrying…</p>}
+      {p.status === 'error' && <p className="error small">Couldn't load trades, retrying… {p.error}</p>}
       {p.status === 'ready' && rows.length === 0 && <p className="muted small">No trades yet.</p>}
       {rows.length > 0 && (
         <table className="trades">

@@ -212,3 +212,5 @@ td.sell { color: var(--red); }
 .chart-box { position: relative; height: 340px; }
 .chart-overlay { position: absolute; inset: 0; display: grid; place-items: center; z-index: 2; pointer-events: none; }
 @media (max-width: 860px) { .chart-box { height: 280px; } }
+.chart-overlay > span { text-align: center; padding: 0 16px; }
+.chart-err { display: block; margin-top: 6px; color: var(--muted); font-size: 0.75rem; word-break: break-word; }

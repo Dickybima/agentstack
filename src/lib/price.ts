@@ -34,6 +34,7 @@ const SUBSCRIPT = '₀₁₂₃₄₅₆₇₈₉'
 export function fmtSmall(n: number, prefix = '') {
   // Axis ticks near zero come through as float noise like 5e-21; show those as plain 0.
   if (!Number.isFinite(n) || Math.abs(n) < 1e-15) return `${prefix}0`
+  if (n < 0) return `-${fmtSmall(-n, prefix)}`
   if (n >= 1) return prefix + n.toLocaleString('en-US', { maximumFractionDigits: 4 })
   if (n >= 0.01) return prefix + n.toLocaleString('en-US', { maximumSignificantDigits: 4 })
   const zeros = Math.floor(-Math.log10(n)) // e.g. 7.6e-6 → 5 zeros after "0."
@@ -47,6 +48,7 @@ export function fmtSmall(n: number, prefix = '') {
 
 export function fmtUsd(n: number) {
   if (!Number.isFinite(n)) return '–'
+  if (n < 0) return `-${fmtUsd(-n)}`
   if (n < 1) return fmtSmall(n, '$')
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`
