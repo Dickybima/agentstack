@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useBalance, useBytecode, useConnection, usePublicClient, useReadContract, useReadContracts, useWriteContract } from 'wagmi'
 import { formatUnits, isAddress, maxUint256, parseUnits, type Address } from 'viem'
 import {
@@ -17,8 +17,11 @@ import {
   type CurveState,
 } from '../lib/pons'
 import { explorerAddress, explorerTx, robinhoodChain } from '../lib/chain'
-import { errMsg, fmt, logoUrl, safeUrl, shortAddr } from '../lib/format'
+import { errMsg, fmt, safeUrl, shortAddr } from '../lib/format'
 import Progress from '../components/Progress'
+import PriceChart from '../components/PriceChart'
+import { useEthUsd, fmtSmall, fmtUsd } from '../lib/price'
+import { useCurveTrades, type Trade } from '../lib/trades'
 import TokenLogo from '../components/TokenLogo'
 
 export default function TokenPage() {
@@ -92,6 +95,9 @@ function TokenView({ token }: { token: Address }) {
     c?.[6].result,
   ]
 
+  const ethUsd = useEthUsd().data
+  const history = useCurveTrades(token, curve, tokenDecimals, quoteDecimals)
+
   const retry = () => {
     launch.refetch()
     meta.refetch()
@@ -142,14 +148,16 @@ function TokenView({ token }: { token: Address }) {
     curveState && curveState.tokenReserve > 0n
       ? Number(formatUnits(curveState.quoteReserve, quoteDecimals)) / Number(formatUnits(curveState.tokenReserve, tokenDecimals))
       : 0
-  const mcap = supply ? price * Number(formatUnits(supply, tokenDecimals)) : 0
+  const supplyNum = supply ? Number(formatUnits(supply, tokenDecimals)) : 0
+  const mcap = price * supplyNum
+  const usdOk = isNative && !!ethUsd
   const socials = info?.[3]
 
   return (
     <div className="token-page">
       <section className="card">
         <div className="token-head">
-          <TokenLogo src={logoUrl(info?.[1])} symbol={symbol ?? '??'} size={72} />
+          <TokenLogo logo={info?.[1]} token={token} symbol={symbol ?? '??'} size={72} />
           <div className="token-title">
             <h1>{name}</h1>
             <span className="muted">${symbol}</span>
@@ -179,11 +187,11 @@ function TokenView({ token }: { token: Address }) {
         <div className="stats">
           <div>
             <span className="muted small">Price</span>
-            <strong>{price ? price.toExponential(3) : '–'} {quoteSymbol}</strong>
+            <strong title={`${fmtSmall(price)} ${quoteSymbol}`}>{usdOk ? fmtSmall(price * ethUsd!, '$') : `${fmtSmall(price)} ${quoteSymbol}`}</strong>
           </div>
           <div>
             <span className="muted small">Market cap</span>
-            <strong>{mcap ? mcap.toLocaleString('en-US', { maximumFractionDigits: 3 }) : '–'} {quoteSymbol}</strong>
+            <strong title={`${mcap.toFixed(4)} ${quoteSymbol}`}>{usdOk ? fmtUsd(mcap * ethUsd!) : `${mcap.toFixed(3)} ${quoteSymbol}`}</strong>
           </div>
           <div>
             <span className="muted small">Creator tax</span>
@@ -194,6 +202,15 @@ function TokenView({ token }: { token: Address }) {
             <strong>{l.buybackEnabled ? 'On' : 'Off'}</strong>
           </div>
         </div>
+
+        <PriceChart
+          trades={history.trades}
+          supply={supplyNum}
+          ethUsd={ethUsd}
+          quoteSymbol={quoteSymbol}
+          quoteDecimals={quoteDecimals}
+          status={history.status}
+        />
 
         <h3>Graduation progress</h3>
         <Progress pct={pct} />
@@ -212,7 +229,14 @@ function TokenView({ token }: { token: Address }) {
           <dd><a href={explorerAddress(l.deployer)} target="_blank" rel="noreferrer">{shortAddr(l.deployer)}</a></dd>
         </dl>
 
-        <Trades curve={l.curve} tokenDecimals={tokenDecimals} quoteDecimals={quoteDecimals} quoteSymbol={quoteSymbol} />
+        <TradesTable
+          trades={history.trades}
+          status={history.status}
+          tokenDecimals={tokenDecimals}
+          quoteDecimals={quoteDecimals}
+          quoteSymbol={quoteSymbol}
+          ethUsd={usdOk ? ethUsd : undefined}
+        />
       </section>
 
       <aside>
@@ -429,51 +453,45 @@ function TradePanel(p: TradeProps) {
   )
 }
 
-const TRADE_LOOKBACK = 600_000n // ≈ 17 hours at ~100ms blocks
+function timeAgo(t: number) {
+  const s = Math.max(0, Math.floor(Date.now() / 1000 - t))
+  if (s < 60) return `${s}s`
+  if (s < 3600) return `${Math.floor(s / 60)}m`
+  if (s < 86400) return `${Math.floor(s / 3600)}h`
+  return `${Math.floor(s / 86400)}d`
+}
 
-function Trades(p: { curve: Address; tokenDecimals: number; quoteDecimals: number; quoteSymbol: string }) {
-  const client = usePublicClient({ chainId: robinhoodChain.id })
-  const q = useQuery({
-    queryKey: ['trades', p.curve],
-    enabled: !!client,
-    refetchInterval: 10_000,
-    queryFn: async () => {
-      const latest = await client!.getBlockNumber()
-      const logs = await client!.getContractEvents({
-        address: p.curve,
-        abi: curveAbi,
-        fromBlock: latest > TRADE_LOOKBACK ? latest - TRADE_LOOKBACK : 0n,
-        toBlock: latest,
-      })
-      return logs
-        .filter((l) => l.eventName === 'CurveBuy' || l.eventName === 'CurveSell')
-        .reverse()
-        .slice(0, 40)
-    },
-  })
-
+function TradesTable(p: {
+  trades: Trade[]
+  status: 'loading' | 'ready' | 'error'
+  tokenDecimals: number
+  quoteDecimals: number
+  quoteSymbol: string
+  ethUsd?: number
+}) {
+  const rows = p.trades.slice(-50).reverse()
   return (
     <>
       <h3>Recent trades</h3>
-      {q.isPending && <p className="muted small">Loading…</p>}
-      {q.isError && <p className="error small">{errMsg(q.error)}</p>}
-      {q.data?.length === 0 && <p className="muted small">No trades yet.</p>}
-      {!!q.data?.length && (
+      {p.status === 'loading' && <p className="muted small">Loading…</p>}
+      {p.status === 'error' && <p className="error small">Couldn't load trades, retrying…</p>}
+      {p.status === 'ready' && rows.length === 0 && <p className="muted small">No trades yet.</p>}
+      {rows.length > 0 && (
         <table className="trades">
           <thead>
-            <tr><th>Type</th><th>Account</th><th>{p.quoteSymbol}</th><th>Token</th><th>Tx</th></tr>
+            <tr><th>Type</th><th>Account</th><th>{p.ethUsd ? 'USD' : p.quoteSymbol}</th><th>Token</th><th>Age</th><th>Tx</th></tr>
           </thead>
           <tbody>
-            {q.data.map((log) => {
-              const buy = log.eventName === 'CurveBuy'
-              const a = log.args as { buyer?: Address; seller?: Address; quoteIn?: bigint; quoteOut?: bigint; tokensIn?: bigint; tokensOut?: bigint }
+            {rows.map((t) => {
+              const q = Number(formatUnits(t.quote, p.quoteDecimals))
               return (
-                <tr key={`${log.transactionHash}-${log.logIndex}`}>
-                  <td className={buy ? 'buy' : 'sell'}>{buy ? 'Buy' : 'Sell'}</td>
-                  <td>{shortAddr(buy ? a.buyer : a.seller)}</td>
-                  <td>{fmt((buy ? a.quoteIn : a.quoteOut) ?? 0n, p.quoteDecimals, 5)}</td>
-                  <td>{fmt((buy ? a.tokensOut : a.tokensIn) ?? 0n, p.tokenDecimals)}</td>
-                  <td><a href={explorerTx(log.transactionHash)} target="_blank" rel="noreferrer">↗</a></td>
+                <tr key={`${t.hash}-${t.logIndex}`}>
+                  <td className={t.type}>{t.type === 'buy' ? 'Buy' : 'Sell'}</td>
+                  <td>{shortAddr(t.account)}</td>
+                  <td>{p.ethUsd ? fmtUsd(q * p.ethUsd) : fmt(t.quote, p.quoteDecimals, 5)}</td>
+                  <td>{fmt(t.tokens, p.tokenDecimals)}</td>
+                  <td className="muted">{timeAgo(t.time)}</td>
+                  <td><a href={explorerTx(t.hash)} target="_blank" rel="noreferrer">↗</a></td>
                 </tr>
               )
             })}

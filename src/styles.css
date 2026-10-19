@@ -195,3 +195,20 @@ td.sell { color: var(--red); }
 .notice p { margin: 0; word-break: break-word; }
 .spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--panel-2); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* chart */
+.chart-card { margin: 20px 0 4px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+.chart-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.seg-mini { display: flex; gap: 2px; background: var(--panel); border-radius: 8px; padding: 2px; }
+.seg-mini button { background: none; border: 0; color: var(--muted); padding: 4px 9px; border-radius: 6px; font: inherit; font-size: 0.8rem; cursor: pointer; }
+.seg-mini button.active { background: var(--panel-2); color: var(--accent); }
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--accent); }
+.live .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.25; } }
+.chart-legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); padding: 0 4px 4px; }
+.chart-legend b { color: var(--text); font-weight: 600; }
+.chart-legend b.up { color: var(--accent); }
+.chart-legend b.down { color: var(--red); }
+.chart-box { position: relative; height: 340px; }
+.chart-overlay { position: absolute; inset: 0; display: grid; place-items: center; z-index: 2; pointer-events: none; }
+@media (max-width: 860px) { .chart-box { height: 280px; } }

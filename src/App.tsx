@@ -4,9 +4,8 @@ import Home from './pages/Home'
 import Create from './pages/Create'
 import TokenPage from './pages/Token'
 import Profile from './pages/Profile'
+import { BRAND, LOOSE_TOKEN } from './lib/brand'
 
-export const BRAND = 'LOOSE AGENT'
-export const LOOSE_TOKEN = '0x351e3ee4d6a0eeb1986826cc2f673373516b9b80'
 
 export default function App() {
   return (

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Launch } from '../lib/launches'
 import { ZERO_ADDRESS, progressPct } from '../lib/pons'
-import { fmt, logoUrl, shortAddr } from '../lib/format'
+import { fmt, shortAddr } from '../lib/format'
 import Progress from './Progress'
 import TokenLogo from './TokenLogo'
 
@@ -11,7 +11,7 @@ export default function TokenCard({ launch }: { launch: Launch }) {
   return (
     <Link to={`/token/${launch.token}`} className="card token-card">
       <div className="token-head">
-        <TokenLogo src={logoUrl(launch.logo)} symbol={launch.symbol} />
+        <TokenLogo logo={launch.logo} token={launch.token} symbol={launch.symbol} />
         <div className="token-title">
           <strong>{launch.name}</strong>
           <span className="muted">${launch.symbol}</span>

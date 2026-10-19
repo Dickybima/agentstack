@@ -4,7 +4,7 @@ import { useConnection, usePublicClient, useReadContract, useReadContracts, useW
 import { parseEther, parseEventLogs, toHex, type Address } from 'viem'
 import { PONS, ZERO_ADDRESS, factoryAbi, launchAndBuyAbi, withSlippage } from '../lib/pons'
 import { robinhoodChain } from '../lib/chain'
-import { errMsg, fmt, logoUrl } from '../lib/format'
+import { errMsg, fmt } from '../lib/format'
 import TokenLogo from '../components/TokenLogo'
 
 const factory = { address: PONS.factory, abi: factoryAbi } as const
@@ -246,7 +246,7 @@ export default function Create() {
       <aside className="card preview">
         <h3>Preview</h3>
         <div className="token-head">
-          <TokenLogo src={logoUrl(form.logo)} symbol={form.symbol || '??'} size={56} />
+          <TokenLogo logo={form.logo} symbol={form.symbol || '??'} size={56} />
           <div className="token-title">
             <strong>{form.name || 'Token name'}</strong>
             <span className="muted">${form.symbol.toUpperCase() || 'SYMBOL'}</span>
