@@ -18,6 +18,10 @@ npm run dev            # http://localhost:5173
 npm run build          # static output in dist/
 ```
 
+### RPC
+
+The browser reads chain data through `/api/rpc`, a Vercel serverless proxy (`api/rpc.js`) that forwards to the first Robinhood Chain RPC that answers. This avoids browser CORS blocks and the rate limits of the public endpoint. For the best reliability, set `RPC_URL` in Vercel (*Settings → Environment Variables*) to a private endpoint from Alchemy, QuickNode, etc. It stays server-side and is tried first.
+
 ### Wallets
 
 The connect dialog lists every installed browser wallet (MetaMask, Rabby, OKX, … via EIP-6963) and links to install the others. To also offer **WalletConnect** (QR code for mobile wallets), create a free project id at [dashboard.reown.com](https://dashboard.reown.com) and set `VITE_WALLETCONNECT_PROJECT_ID` (locally in `.env`, on Vercel under *Settings → Environment Variables*, then redeploy). Add your site domain to the project's allowed domains in Reown.

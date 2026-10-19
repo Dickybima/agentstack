@@ -1,7 +1,14 @@
 import { defineChain } from 'viem'
 
-export const RPC_URL: string =
-  import.meta.env.VITE_RPC_URL || 'https://rpc.mainnet.chain.robinhood.com'
+export const PUBLIC_RPC_URL = 'https://rpc.mainnet.chain.robinhood.com'
+
+// Order the app tries RPCs in: a custom one if configured, then our same-origin proxy
+// (api/rpc.js on Vercel, avoids browser CORS/rate-limit issues), then the public endpoint.
+export const RPC_URLS: string[] = [
+  import.meta.env.VITE_RPC_URL,
+  typeof window !== 'undefined' ? `${window.location.origin}/api/rpc` : undefined,
+  PUBLIC_RPC_URL,
+].filter((u): u is string => !!u)
 
 export const EXPLORER_URL = 'https://robinhoodchain.blockscout.com'
 
@@ -11,7 +18,7 @@ export const robinhoodChain = defineChain({
   name: 'Robinhood Chain',
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   rpcUrls: {
-    default: { http: [RPC_URL] },
+    default: { http: [PUBLIC_RPC_URL] },
   },
   blockExplorers: {
     default: { name: 'Blockscout', url: EXPLORER_URL, apiUrl: `${EXPLORER_URL}/api` },
