@@ -12,7 +12,7 @@ export default function App() {
     <>
       <header className="nav">
         <Link to="/" className="brand">
-          <span className="brand-mark">▲</span> {BRAND}
+          <img src="/logo.png" alt="" className="brand-mark" /> {BRAND}
         </Link>
         <nav>
           <NavLink to="/" end>Explore</NavLink>

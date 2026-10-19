@@ -46,7 +46,7 @@ h3 { margin-top: 24px; font-size: 1rem; }
 }
 .brand { font-weight: 800; font-size: 1.15rem; color: var(--text); display: flex; gap: 8px; align-items: center; }
 .brand:hover { text-decoration: none; }
-.brand-mark { color: var(--accent); }
+.brand-mark { width: 32px; height: 32px; }
 .nav nav { display: flex; gap: 4px; flex: 1; }
 .nav nav a { color: var(--muted); padding: 6px 12px; border-radius: 999px; }
 .nav nav a.active, .nav nav a:hover { color: var(--text); background: var(--panel-2); text-decoration: none; }
