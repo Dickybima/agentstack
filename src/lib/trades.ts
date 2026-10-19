@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePublicClient } from 'wagmi'
 import { decodeEventLog, formatUnits, type Address, type Hex, type PublicClient } from 'viem'
-import { EXPLORER_URL, robinhoodChain } from './chain'
+import { robinhoodChain } from './chain'
+import { explorerLogs } from './blockscout'
 import { curveAbi } from './pons'
 
 export type Trade = {
@@ -51,56 +52,6 @@ function toTrade(log: RawLog, time: number, tokenDecimals: number, quoteDecimals
     logIndex: log.logIndex,
     hash: log.hash,
   }
-}
-
-const hexNum = (v: string) => (v.startsWith('0x') ? Number.parseInt(v, 16) : Number(v))
-
-// Blockscout's logs API returns timestamps with each log and pages at 1000 results.
-async function blockscoutLogs(curve: Address): Promise<RawLog[]> {
-  const out: RawLog[] = []
-  const seen = new Set<string>()
-  let from = 0n
-  for (let page = 0; page < 30; page++) {
-    const result = await fetchLogsPage(curve, from)
-    for (const l of result) {
-      const key = `${l.transactionHash}-${l.logIndex}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      out.push({
-        topics: l.topics.filter(Boolean) as Hex[],
-        data: l.data as Hex,
-        block: BigInt(hexNum(l.blockNumber)),
-        logIndex: hexNum(l.logIndex),
-        hash: l.transactionHash as Hex,
-        time: hexNum(l.timeStamp),
-      })
-    }
-    if (result.length < 1000) break
-    from = out[out.length - 1].block // same block may hold more logs; duplicates are skipped
-  }
-  return out
-}
-
-type BlockscoutLog = { topics: (string | null)[]; data: string; blockNumber: string; logIndex: string; transactionHash: string; timeStamp: string }
-
-async function fetchLogsPage(curve: Address, from: bigint): Promise<BlockscoutLog[]> {
-  const errors: string[] = []
-  const urls = [
-    `/api/logs?address=${curve}&fromBlock=${from}`,
-    `${EXPLORER_URL}/api?module=logs&action=getLogs&address=${curve}&fromBlock=${from}&toBlock=latest`,
-  ]
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const d = await res.json()
-      if (Array.isArray(d?.result)) return d.result
-      throw new Error(d?.error || d?.message || 'bad response')
-    } catch (e) {
-      errors.push((e as Error).message)
-    }
-  }
-  throw new Error(`Blockscout: ${errors.join('; ')}`)
 }
 
 // Fallback: scan recent history over RPC in small windows, newest first.
@@ -198,7 +149,7 @@ export function useCurveTrades(curve: Address | undefined, tokenDecimals: number
         const latest = await client!.getBlockNumber()
         let logs: RawLog[] | undefined
         try {
-          logs = await blockscoutLogs(curve!)
+          logs = await explorerLogs(curve!)
         } catch (e) {
           problems.push((e as Error).message)
           logs = await rpcLogs(client!, curve!, latest)

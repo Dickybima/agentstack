@@ -17,9 +17,17 @@ export async function GET(request) {
     return json({ error: 'bad params' }, 400)
   }
 
+  // Pass through topic filters (topic0..3 and their *_opr combinators), validated.
+  const extra = new URLSearchParams()
+  for (const [k, v] of searchParams) {
+    if (/^topic[0-3]$/.test(k) && /^0x[0-9a-fA-F]{64}$/.test(v)) extra.set(k, v)
+    else if (/^topic[0-3]_[0-3]_opr$/.test(k) && (v === 'and' || v === 'or')) extra.set(k, v)
+  }
+  const tail = extra.size ? `&${extra}` : ''
+
   const errors = []
   for (const host of HOSTS) {
-    const url = `${host}/api?module=logs&action=getLogs&address=${address}&fromBlock=${fromBlock}&toBlock=${toBlock}`
+    const url = `${host}/api?module=logs&action=getLogs&address=${address}&fromBlock=${fromBlock}&toBlock=${toBlock}${tail}`
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(12_000), headers: { accept: 'application/json' } })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
